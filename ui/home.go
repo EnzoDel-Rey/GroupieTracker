@@ -12,15 +12,19 @@ func BuildHome() fyne.CanvasObject {
 	artists, err := api.FetchArtists()
 
 	if err != nil {
-		return container.NewVBox(
-			widget.NewLabel("Erreur de chargement de l'API"),
-		)
+		return widget.NewLabel("Erreur de chargement")
 	}
 
 	list := container.NewVBox()
 
 	for _, artist := range artists {
-		list.Add(widget.NewLabel(artist.Name))
+		a := artist
+
+		btn := widget.NewButton(a.Name, func() {
+			ShowArtistDetails(a)
+		})
+
+		list.Add(btn)
 	}
 
 	return container.NewVScroll(list)
