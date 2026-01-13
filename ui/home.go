@@ -44,3 +44,12 @@ func BuildHome() fyne.CanvasObject {
 		container.NewVScroll(list),
 	)
 }
+
+var MainWindow fyne.Window
+
+func OnArtistSelected(artist models.Artist) {
+
+	mapView := ShowArtistMap(artist)
+
+	MainWindow.SetContent(mapView)
+}
