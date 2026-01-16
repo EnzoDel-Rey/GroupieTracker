@@ -1,8 +1,4 @@
 A faire : 
 
-1. Barre de recherche avec résultats en temps réel
-2. Filtres (Groupe, dates,noms des membres, etc..)
-3. Géolocalisation ✅
-4. Affichage d'image de groupe
 5. UI de Fyne assez stylé
 6. Bonus
