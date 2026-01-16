@@ -1,42 +1,60 @@
 package ui
 
 import (
+	"fmt"
 	"groupietracker/models"
-	"strconv"
+	"strings"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
 
 func ShowArtistDetails(artist models.Artist) {
-	w := fyne.CurrentApp().NewWindow("Détails : " + artist.Name)
-
-	members := "Membres:\n"
-	for _, m := range artist.Members {
-		members += "- " + m + "\n"
+	// 1. Chargement de l'image depuis l'URL
+	res, err := fyne.LoadResourceFromURLString(artist.Image)
+	var img *canvas.Image
+	if err == nil {
+		img = canvas.NewImageFromResource(res)
+		img.FillMode = canvas.ImageFillContain
+		img.SetMinSize(fyne.NewSize(200, 200))
 	}
 
-	mapButton := widget.NewButton("Voir les concerts sur la carte", func() {
-		mapWin := fyne.CurrentApp().NewWindow("Carte - " + artist.Name)
-		mapWin.SetContent(ShowArtistMap(artist))
-		mapWin.Resize(fyne.NewSize(850, 600))
-		mapWin.Show()
+	// 2. Informations textuelles
+	name := widget.NewLabelWithStyle(artist.Name, fyne.TextAlignCenter, fyne.TextStyle{Bold: true, Italic: true})
+	creation := widget.NewLabel(fmt.Sprintf("📅 Créé en : %d", artist.CreationDate))
+	album := widget.NewLabel(fmt.Sprintf("💿 Premier album : %s", artist.FirstAlbum))
+
+	members := widget.NewLabel(fmt.Sprintf("👥 Membres : %s", strings.Join(artist.Members, ", ")))
+	members.Wrapping = fyne.TextWrapWord
+
+	// 3. Bouton pour aller voir la carte
+	mapBtn := widget.NewButtonWithIcon("VOIR LA TOURNÉE SUR LA CARTE", nil, func() {
+		MainWindow.SetContent(ShowArtistMap(artist))
+	})
+	mapBtn.Importance = widget.HighImportance
+
+	// 4. Bouton Retour
+	backBtn := widget.NewButton("Retour à l'accueil", func() {
+		MainWindow.SetContent(BuildHome())
 	})
 
+	// 5. Assemblage du contenu
 	content := container.NewVBox(
-		widget.NewLabelWithStyle(artist.Name, fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-		widget.NewLabel("Année de création : "+strconv.Itoa(artist.CreationDate)),
-		widget.NewLabel("Premier album : "+artist.FirstAlbum),
-		widget.NewLabel(members),
-		mapButton,
-		widget.NewSeparator(),
-		widget.NewButton("Fermer", func() {
-			w.Close()
-		}),
+		backBtn,
+		name,
 	)
 
-	w.SetContent(content)
-	w.Resize(fyne.NewSize(450, 550))
-	w.Show()
+	if img != nil {
+		content.Add(img)
+	}
+
+	content.Add(creation)
+	content.Add(album)
+	content.Add(members)
+	content.Add(widget.NewSeparator())
+	content.Add(mapBtn)
+
+	MainWindow.SetContent(container.NewPadded(container.NewVScroll(content)))
 }
