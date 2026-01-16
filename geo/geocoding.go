@@ -1,5 +1,3 @@
-/* code pour intégrer l'API nominatim qui permet de convertir une adresse en coordonnées */
-
 package geo
 
 import (
@@ -9,6 +7,7 @@ import (
 	"net/url"
 )
 
+// Location est la structure utilisée par tout ton projet
 type Location struct {
 	City      string
 	Country   string
@@ -17,40 +16,24 @@ type Location struct {
 	Longitude float64
 }
 
-type GeocodingResult struct {
-	Lat string `json:"lat"`
-	Lon string `json:"lon"`
+// googleGeocodeResponse permet de lire le JSON de Google
+type googleGeocodeResponse struct {
+	Results []struct {
+		Geometry struct {
+			Location struct {
+				Lat float64 `json:"lat"`
+				Lng float64 `json:"lng"`
+			} `json:"location"`
+		} `json:"geometry"`
+	} `json:"results"`
+	Status string `json:"status"`
 }
 
-func geocodeAddress(address string) (float64, float64, error) {
-	encodedAddress := url.QueryEscape(address)
-	apiURL := fmt.Sprintf("https://nominatim.openstreetmap.org/search?q=%s&format=json&limit=1", encodedAddress)
-
-	req, _ := http.NewRequest("GET", apiURL, nil)
-	req.Header.Set("User-Agent", "GroupieTracker/1.0")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return 0, 0, err
-	}
-	defer resp.Body.Close()
-
-	var results []GeocodingResult
-	json.NewDecoder(resp.Body).Decode(&results)
-
-	if len(results) == 0 {
-		return 0, 0, fmt.Errorf("adresse non trouvée: %s", address)
-	}
-
-	var lat, lon float64
-	fmt.Sscanf(results[0].Lat, "%f", &lat)
-	fmt.Sscanf(results[0].Lon, "%f", &lon)
-
-	return lat, lon, nil
-}
-
+// --- DÉCLARATION DES VARIABLES GLOBALES DU PACKAGE ---
+// Ces variables doivent être définies ici pour être accessibles par GetCoordinates
+// GetCoordinates est la fonction appelée par ui/artistmap.go
 func GetCoordinates(address string) (Location, error) {
+	// 1. Vérification sécurisée du cache
 	cacheMutex.RLock()
 	if cached, exists := geocodeCache[address]; exists {
 		cacheMutex.RUnlock()
@@ -58,17 +41,33 @@ func GetCoordinates(address string) (Location, error) {
 	}
 	cacheMutex.RUnlock()
 
-	lat, lon, err := geocodeAddress(address)
+	// 2. Appel à l'API Google (googleApiKey est dans mapview.go)
+	apiURL := fmt.Sprintf("https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s",
+		url.QueryEscape(address), googleApiKey)
+
+	resp, err := http.Get(apiURL)
 	if err != nil {
 		return Location{}, err
 	}
+	defer resp.Body.Close()
 
-	loc := Location{
-		Address:   address,
-		Latitude:  lat,
-		Longitude: lon,
+	var res googleGeocodeResponse
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return Location{}, err
 	}
 
+	if res.Status != "OK" || len(res.Results) == 0 {
+		return Location{}, fmt.Errorf("Google error: %s pour %s", res.Status, address)
+	}
+
+	// 3. Création de l'objet de retour
+	loc := Location{
+		Address:   address,
+		Latitude:  res.Results[0].Geometry.Location.Lat,
+		Longitude: res.Results[0].Geometry.Location.Lng,
+	}
+
+	// 4. Enregistrement sécurisé dans le cache
 	cacheMutex.Lock()
 	geocodeCache[address] = loc
 	cacheMutex.Unlock()
