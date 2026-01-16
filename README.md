@@ -1,7 +1,8 @@
 # Projet GroupieTracker
 
 Groupe 3
-Enzo Del-Rey
+
+<br>Enzo Del-Rey
 Florent Folliard
 Elif Yakut
 
