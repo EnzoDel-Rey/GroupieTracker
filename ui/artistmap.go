@@ -16,9 +16,12 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+// LocationsResponse représente l'objet JSON complet renvoyé par l'URL
+// Exemple pour Queen : {"id":1, "locations": [...], "dates": "..."}
 type LocationsResponse struct {
 	ID        int      `json:"id"`
-	Locations []string `json:"locations"`
+	CityNames []string `json:"locations"` // On mappe le champ "locations" du JSON vers CityNames pour plus de clarté
+	Dates     string   `json:"dates"`
 }
 
 func ShowArtistMap(artist models.Artist) fyne.CanvasObject {
@@ -38,7 +41,7 @@ func ShowArtistMap(artist models.Artist) fyne.CanvasObject {
 	split.Offset = 0.7
 
 	updateMap := func(newMap *canvas.Image) {
-		if newMap.Resource != nil {
+		if newMap != nil && newMap.Resource != nil {
 			mapContainer.Objects = []fyne.CanvasObject{newMap}
 			mapContainer.Refresh()
 			split.Refresh()
@@ -46,6 +49,7 @@ func ShowArtistMap(artist models.Artist) fyne.CanvasObject {
 	}
 
 	go func() {
+		// artist.Locations contient l'URL (ex: https://.../api/locations/1)
 		resp, err := http.Get(artist.Locations)
 		if err != nil {
 			mapContainer.Objects = []fyne.CanvasObject{widget.NewLabel("Erreur API")}
@@ -54,11 +58,16 @@ func ShowArtistMap(artist models.Artist) fyne.CanvasObject {
 		defer resp.Body.Close()
 
 		var locRes LocationsResponse
-		json.NewDecoder(resp.Body).Decode(&locRes)
+		// On décode l'objet JSON qui contient le tableau de villes
+		if err := json.NewDecoder(resp.Body).Decode(&locRes); err != nil {
+			mapContainer.Objects = []fyne.CanvasObject{widget.NewLabel("Erreur décodage")}
+			return
+		}
 
 		var finalCoords []geo.Location
 
-		for _, raw := range locRes.Locations {
+		// On boucle sur CityNames (qui correspond au champ "locations" du JSON de l'objet)
+		for _, raw := range locRes.CityNames {
 			clean := strings.ReplaceAll(strings.ReplaceAll(raw, "-", ", "), "_", " ")
 			cityName := strings.Title(clean)
 
@@ -68,9 +77,9 @@ func ShowArtistMap(artist models.Artist) fyne.CanvasObject {
 		}
 		cityList.Refresh()
 
-		for i, raw := range locRes.Locations {
+		for i, raw := range locRes.CityNames {
 			clean := strings.ReplaceAll(strings.ReplaceAll(raw, "-", ", "), "_", " ")
-			loadLabel.SetText(fmt.Sprintf("GPS %d/%d : %s", i+1, len(locRes.Locations), clean))
+			loadLabel.SetText(fmt.Sprintf("GPS %d/%d : %s", i+1, len(locRes.CityNames), clean))
 
 			loc, err := geo.GetCoordinates(clean)
 			if err == nil {
@@ -84,16 +93,16 @@ func ShowArtistMap(artist models.Artist) fyne.CanvasObject {
 					cityList.Objects[i].(*widget.Button).Enable()
 				}
 			}
+			// Le sleep est important pour ne pas saturer l'API de géocodage
 			time.Sleep(1100 * time.Millisecond)
 		}
 
-		viewAllBtn := widget.NewButtonWithIcon("VOIR TOUT", nil, func() {
-			updateMap(geo.GenerateMapWithMultipleMarkers(finalCoords))
-		})
-		cityList.Objects = append([]fyne.CanvasObject{viewAllBtn, widget.NewSeparator()}, cityList.Objects...)
-		cityList.Refresh()
-
 		if len(finalCoords) > 0 {
+			viewAllBtn := widget.NewButtonWithIcon("VOIR TOUT", nil, func() {
+				updateMap(geo.GenerateMapWithMultipleMarkers(finalCoords))
+			})
+			cityList.Objects = append([]fyne.CanvasObject{viewAllBtn, widget.NewSeparator()}, cityList.Objects...)
+			cityList.Refresh()
 			updateMap(geo.GenerateMapWithMultipleMarkers(finalCoords))
 		} else {
 			mapContainer.Objects = []fyne.CanvasObject{widget.NewLabel("Aucune ville trouvée.")}
