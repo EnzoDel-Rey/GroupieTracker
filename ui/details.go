@@ -1,3 +1,5 @@
+// Ce fichier contient les informations affichées lorsque l'on selectionne un artiste dans l'appli.
+
 package ui
 
 import (
@@ -12,7 +14,7 @@ import (
 )
 
 func ShowArtistDetails(artist models.Artist) {
-	// 1. Chargement de l'image depuis l'URL
+	// Image du groupe
 	res, err := fyne.LoadResourceFromURLString(artist.Image)
 	var img *canvas.Image
 	if err == nil {
@@ -21,7 +23,7 @@ func ShowArtistDetails(artist models.Artist) {
 		img.SetMinSize(fyne.NewSize(200, 200))
 	}
 
-	// 2. Informations textuelles
+	// Informations du groupe
 	name := widget.NewLabelWithStyle(artist.Name, fyne.TextAlignCenter, fyne.TextStyle{Bold: true, Italic: true})
 	creation := widget.NewLabel(fmt.Sprintf("📅 Créé en : %d", artist.CreationDate))
 	album := widget.NewLabel(fmt.Sprintf("💿 Premier album : %s", artist.FirstAlbum))
@@ -29,18 +31,17 @@ func ShowArtistDetails(artist models.Artist) {
 	members := widget.NewLabel(fmt.Sprintf("👥 Membres : %s", strings.Join(artist.Members, ", ")))
 	members.Wrapping = fyne.TextWrapWord
 
-	// 3. Bouton pour aller voir la carte
+	// Bouton pour aller voir la carte interactive des concerts
 	mapBtn := widget.NewButtonWithIcon("VOIR LA TOURNÉE SUR LA CARTE", nil, func() {
 		MainWindow.SetContent(ShowArtistMap(artist))
 	})
 	mapBtn.Importance = widget.HighImportance
 
-	// 4. Bouton Retour
+	// Bouton Retour
 	backBtn := widget.NewButton("Retour à l'accueil", func() {
 		MainWindow.SetContent(BuildHome())
 	})
 
-	// 5. Assemblage du contenu
 	content := container.NewVBox(
 		backBtn,
 		name,

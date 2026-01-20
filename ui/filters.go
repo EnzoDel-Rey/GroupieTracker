@@ -1,3 +1,5 @@
+// Ce fichier contient les filtres de recherche de l'appli.
+
 package ui
 
 import (
@@ -24,11 +26,11 @@ func ApplyAllFilters(artists []models.Artist, opt FilterOptions) []models.Artist
 		if opt.SearchText != "" && !strings.Contains(strings.ToLower(a.Name), strings.ToLower(opt.SearchText)) {
 			continue
 		}
-		// Filtre Année Création
+		// Filtre Année Création (Curseur - / +)
 		if a.CreationDate < opt.CreationYearMin {
 			continue
 		}
-		// Filtre Premier Album
+		// Filtre Premier Album (Bouton déroulant avec une liste de dates)
 		if opt.FirstAlbumYear != 0 {
 			parts := strings.Split(a.FirstAlbum, "-")
 			if len(parts) == 3 {
@@ -39,13 +41,13 @@ func ApplyAllFilters(artists []models.Artist, opt FilterOptions) []models.Artist
 				}
 			}
 		}
-		// Filtre Membres
+		// Filtre Membres (check boxes)
 		if len(opt.MembersCount) > 0 {
 			if !opt.MembersCount[len(a.Members)] {
 				continue
 			}
 		}
-		// Filtre Ville
+		// Filtre Ville (string)
 		if opt.LocationSearch != "" {
 			cities, exists := ArtistLocationsMap[a.ID]
 			if !exists {

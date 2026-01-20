@@ -1,7 +1,6 @@
 package models
 
-// Artist représente la structure d'un artiste telle qu'elle apparaît
-// dans le tableau JSON de l'endpoint /api/artists
+// Cette structure contient toutes les données présentes dans l'API pour chaque artiste.
 type Artist struct {
 	ID           int      `json:"id"`
 	Image        string   `json:"image"`
@@ -9,9 +8,7 @@ type Artist struct {
 	Members      []string `json:"members"`
 	CreationDate int      `json:"creationDate"`
 	FirstAlbum   string   `json:"firstAlbum"`
-	// Cette variable stocke l'URL vers l'objet "locations" (ex: /api/locations/1)
-	Locations string `json:"locations"`
-	// Ces variables stockent les autres URLs de l'API
-	ConcertDates string `json:"concertDates"`
-	Relations    string `json:"relations"`
+	Locations    string   `json:"locations"`
+	ConcertDates string   `json:"concertDates"`
+	Relations    string   `json:"relations"`
 }

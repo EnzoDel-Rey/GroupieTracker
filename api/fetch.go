@@ -2,9 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"net/http"
 	"groupietracker/models"
+	"net/http"
 )
+
+// Collecte des données de l'API groupietracker
 
 func FetchArtists() ([]models.Artist, error) {
 	resp, err := http.Get("https://groupietrackers.herokuapp.com/api/artists")

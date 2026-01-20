@@ -1,3 +1,5 @@
+// Ce fichier contient les informations de la page principale de l'appli
+
 package ui
 
 import (
@@ -31,7 +33,7 @@ func BuildHome() fyne.CanvasObject {
 		MembersCount:    make(map[int]bool),
 	}
 
-	// --- 1. CONFIGURATION RECHERCHE PRINCIPALE (ARTISTES) ---
+	// Barre de recherche principale
 	var allArtistNames []string
 	for _, a := range artists {
 		allArtistNames = append(allArtistNames, a.Name)
@@ -45,7 +47,7 @@ func BuildHome() fyne.CanvasObject {
 	locEntry := widget.NewSelectEntry(nil)
 	locEntry.SetPlaceHolder("Ville de concert...")
 
-	// Chargement asynchrone des villes
+	// Chargement des villes
 	go func() {
 		resp, err := http.Get("https://groupietrackers.herokuapp.com/api/locations")
 		if err == nil {
@@ -77,7 +79,7 @@ func BuildHome() fyne.CanvasObject {
 		list.Refresh()
 	}
 
-	// --- LOGIQUE SUGGESTIONS PRINCIPALES ---
+	// Suggestions pendant la recherche
 	searchBar.OnChanged = func(s string) {
 		currentOpts.SearchText = s
 		if s == "" {
@@ -95,7 +97,6 @@ func BuildHome() fyne.CanvasObject {
 		updateList()
 	}
 
-	// --- LOGIQUE SUGGESTIONS VILLES (CORRIGÉE) ---
 	locEntry.OnChanged = func(s string) {
 		currentOpts.LocationSearch = s
 		if s == "" {
@@ -110,12 +111,11 @@ func BuildHome() fyne.CanvasObject {
 			}
 			locEntry.SetOptions(filtered)
 		}
-		// On force l'affichage du menu popup pour ce widget précis
 		locEntry.Show()
 		updateList()
 	}
 
-	// --- AUTRES FILTRES ---
+	// Visuel et emplacement des filtres de recherche
 	sliderLabel := widget.NewLabel("Créé après : 1950")
 	creationSlider := widget.NewSlider(1950, 2024)
 	creationSlider.OnChanged = func(v float64) {

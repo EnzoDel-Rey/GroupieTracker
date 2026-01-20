@@ -1,3 +1,6 @@
+// Main.go qui lance l'application et charge les villes en arrière plan pour éviter
+// un long temps de chargement des données géographiques
+
 package main
 
 import (

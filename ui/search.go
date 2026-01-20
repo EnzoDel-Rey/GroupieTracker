@@ -1,3 +1,5 @@
+// Logique de recherche principale des artistes
+
 package ui
 
 import (

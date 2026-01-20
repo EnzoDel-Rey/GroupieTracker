@@ -1,3 +1,5 @@
+//fichier qui permet de lancer l'application Fyne
+
 package ui
 
 import (

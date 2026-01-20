@@ -1,3 +1,7 @@
+// Ce fichier appelle 2 API :
+// 1- Une API Google Geocode qui convertit les adresses en coordonnées
+// 2- Une API Google Maps qui génère une map monde où l'on peut mettre des curseurs dessus.
+
 package geo
 
 import (
@@ -7,7 +11,6 @@ import (
 	"net/url"
 )
 
-// Location est la structure utilisée par tout ton projet
 type Location struct {
 	City      string
 	Country   string
@@ -16,7 +19,7 @@ type Location struct {
 	Longitude float64
 }
 
-// googleGeocodeResponse permet de lire le JSON de Google
+// Structure qui permet de lire la réponse en Json de l'API google qui convertit les adresses en coordonnées
 type googleGeocodeResponse struct {
 	Results []struct {
 		Geometry struct {
@@ -29,11 +32,7 @@ type googleGeocodeResponse struct {
 	Status string `json:"status"`
 }
 
-// --- DÉCLARATION DES VARIABLES GLOBALES DU PACKAGE ---
-// Ces variables doivent être définies ici pour être accessibles par GetCoordinates
-// GetCoordinates est la fonction appelée par ui/artistmap.go
 func GetCoordinates(address string) (Location, error) {
-	// 1. Vérification sécurisée du cache
 	cacheMutex.RLock()
 	if cached, exists := geocodeCache[address]; exists {
 		cacheMutex.RUnlock()
@@ -41,7 +40,7 @@ func GetCoordinates(address string) (Location, error) {
 	}
 	cacheMutex.RUnlock()
 
-	// 2. Appel à l'API Google (googleApiKey est dans mapview.go)
+	// Appel à l'API Google
 	apiURL := fmt.Sprintf("https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s",
 		url.QueryEscape(address), googleApiKey)
 
@@ -60,14 +59,12 @@ func GetCoordinates(address string) (Location, error) {
 		return Location{}, fmt.Errorf("Google error: %s pour %s", res.Status, address)
 	}
 
-	// 3. Création de l'objet de retour
 	loc := Location{
 		Address:   address,
 		Latitude:  res.Results[0].Geometry.Location.Lat,
 		Longitude: res.Results[0].Geometry.Location.Lng,
 	}
 
-	// 4. Enregistrement sécurisé dans le cache
 	cacheMutex.Lock()
 	geocodeCache[address] = loc
 	cacheMutex.Unlock()

@@ -1,3 +1,5 @@
+// Fichier qui contient les données de l'interface Fyne une fois qu'on a cliqué sur "Voir les concerts"
+
 package ui
 
 import (
@@ -16,11 +18,10 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// LocationsResponse représente l'objet JSON complet renvoyé par l'URL
-// Exemple pour Queen : {"id":1, "locations": [...], "dates": "..."}
+// Cette structure contient les données nécessaires à la map concernant les concerts des artistes.
 type LocationsResponse struct {
 	ID        int      `json:"id"`
-	CityNames []string `json:"locations"` // On mappe le champ "locations" du JSON vers CityNames pour plus de clarté
+	CityNames []string `json:"locations"`
 	Dates     string   `json:"dates"`
 }
 
@@ -48,8 +49,8 @@ func ShowArtistMap(artist models.Artist) fyne.CanvasObject {
 		}
 	}
 
+	// Messages d'erreurs + boutons de l'interface
 	go func() {
-		// artist.Locations contient l'URL (ex: https://.../api/locations/1)
 		resp, err := http.Get(artist.Locations)
 		if err != nil {
 			mapContainer.Objects = []fyne.CanvasObject{widget.NewLabel("Erreur API")}
@@ -58,7 +59,6 @@ func ShowArtistMap(artist models.Artist) fyne.CanvasObject {
 		defer resp.Body.Close()
 
 		var locRes LocationsResponse
-		// On décode l'objet JSON qui contient le tableau de villes
 		if err := json.NewDecoder(resp.Body).Decode(&locRes); err != nil {
 			mapContainer.Objects = []fyne.CanvasObject{widget.NewLabel("Erreur décodage")}
 			return
@@ -66,7 +66,6 @@ func ShowArtistMap(artist models.Artist) fyne.CanvasObject {
 
 		var finalCoords []geo.Location
 
-		// On boucle sur CityNames (qui correspond au champ "locations" du JSON de l'objet)
 		for _, raw := range locRes.CityNames {
 			clean := strings.ReplaceAll(strings.ReplaceAll(raw, "-", ", "), "_", " ")
 			cityName := strings.Title(clean)
@@ -93,7 +92,7 @@ func ShowArtistMap(artist models.Artist) fyne.CanvasObject {
 					cityList.Objects[i].(*widget.Button).Enable()
 				}
 			}
-			// Le sleep est important pour ne pas saturer l'API de géocodage
+			// Ajout d'un sleep pour éviter de saturer l'API et se retoruver shadow-ban
 			time.Sleep(1100 * time.Millisecond)
 		}
 

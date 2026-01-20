@@ -1,3 +1,5 @@
+// Ce fichier gère les fonctions nécessaires à l'affichage de la map générée par Google Maps.
+
 package geo
 
 import (
@@ -29,6 +31,7 @@ func GenerateMapWithMultipleMarkers(locations []Location) *canvas.Image {
 	return downloadGoogleMap(baseURL + params + markers)
 }
 
+// Fonction qui permet d'afficher une version zoomée de la carte quand on sélectionne une ville en particulier
 func GenerateSingleCityMap(loc Location) *canvas.Image {
 	mapURL := fmt.Sprintf(
 		"https://maps.googleapis.com/maps/api/staticmap?center=%.6f,%.6f&zoom=4&size=800x600&maptype=roadmap&markers=color:blue|label:S|%.6f,%.6f&language=fr&key=%s",
